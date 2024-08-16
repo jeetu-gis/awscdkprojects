@@ -1,0 +1,330 @@
+Resources:
+  iacstacktable00AA7EA1:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      TableName: iac-stack-table
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    Metadata:
+      aws:cdk:path: IacStack/iac-stack-table/Resource
+  functionServiceRoleEF216095:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    Metadata:
+      aws:cdk:path: IacStack/function/ServiceRole/Resource
+  functionServiceRoleDefaultPolicy5ACF569A:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - xray:PutTelemetryRecords
+              - xray:PutTraceSegments
+            Effect: Allow
+            Resource: "*"
+          - Action:
+              - dynamodb:BatchGetItem
+              - dynamodb:ConditionCheckItem
+              - dynamodb:DescribeTable
+              - dynamodb:GetItem
+              - dynamodb:GetRecords
+              - dynamodb:GetShardIterator
+              - dynamodb:Query
+              - dynamodb:Scan
+            Effect: Allow
+            Resource:
+              - Fn::GetAtt:
+                  - iacstacktable00AA7EA1
+                  - Arn
+              - Ref: AWS::NoValue
+        Version: "2012-10-17"
+      PolicyName: functionServiceRoleDefaultPolicy5ACF569A
+      Roles:
+        - Ref: functionServiceRoleEF216095
+    Metadata:
+      aws:cdk:path: IacStack/function/ServiceRole/DefaultPolicy/Resource
+  functionF19B1A04:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Fn::Sub: cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}
+        S3Key: f2fce047744e74ffc73b696219cfa0dd5a7cb0b65c638098ac1d1746eaf03689.zip
+      Environment:
+        Variables:
+          DYNAMODB:
+            Ref: iacstacktable00AA7EA1
+      Handler: index.handler
+      Role:
+        Fn::GetAtt:
+          - functionServiceRoleEF216095
+          - Arn
+      Runtime: nodejs18.x
+      TracingConfig:
+        Mode: Active
+    DependsOn:
+      - functionServiceRoleDefaultPolicy5ACF569A
+      - functionServiceRoleEF216095
+    Metadata:
+      aws:cdk:path: IacStack/function/Resource
+      aws:asset:path: asset.f2fce047744e74ffc73b696219cfa0dd5a7cb0b65c638098ac1d1746eaf03689
+      aws:asset:is-bundled: true
+      aws:asset:property: Code
+  Restapi01EE340E:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: Restapi
+    Metadata:
+      aws:cdk:path: IacStack/Restapi/Resource
+  RestapiDeployment46083E97cc59e4d7da47b8b17871bb4d5ade8b7f:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      Description: Automatically created by the RestApi construct
+      RestApiId:
+        Ref: Restapi01EE340E
+    DependsOn:
+      - RestapiendpointGET3E11EADE
+      - RestapiendpointE1F197CA
+    Metadata:
+      aws:cdk:path: IacStack/Restapi/Deployment/Resource
+  RestapiDeploymentStageprodE8F7F246:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      DeploymentId:
+        Ref: RestapiDeployment46083E97cc59e4d7da47b8b17871bb4d5ade8b7f
+      MethodSettings:
+        - DataTraceEnabled: true
+          HttpMethod: "*"
+          LoggingLevel: INFO
+          ResourcePath: /*
+      RestApiId:
+        Ref: Restapi01EE340E
+      StageName: prod
+      TracingEnabled: true
+    Metadata:
+      aws:cdk:path: IacStack/Restapi/DeploymentStage.prod/Resource
+  RestapiendpointE1F197CA:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Fn::GetAtt:
+          - Restapi01EE340E
+          - RootResourceId
+      PathPart: endpoint
+      RestApiId:
+        Ref: Restapi01EE340E
+    Metadata:
+      aws:cdk:path: IacStack/Restapi/Default/endpoint/Resource
+  RestapiendpointGETApiPermissionIacStackRestapi3EBFDECDGETendpoint339C2B69:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - functionF19B1A04
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: Restapi01EE340E
+            - /
+            - Ref: RestapiDeploymentStageprodE8F7F246
+            - /GET/endpoint
+    Metadata:
+      aws:cdk:path: IacStack/Restapi/Default/endpoint/GET/ApiPermission.IacStackRestapi3EBFDECD.GET..endpoint
+  RestapiendpointGETApiPermissionTestIacStackRestapi3EBFDECDGETendpoint954EA8A6:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - functionF19B1A04
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+          - ""
+          - - "arn:"
+            - Ref: AWS::Partition
+            - ":execute-api:"
+            - Ref: AWS::Region
+            - ":"
+            - Ref: AWS::AccountId
+            - ":"
+            - Ref: Restapi01EE340E
+            - /test-invoke-stage/GET/endpoint
+    Metadata:
+      aws:cdk:path: IacStack/Restapi/Default/endpoint/GET/ApiPermission.Test.IacStackRestapi3EBFDECD.GET..endpoint
+  RestapiendpointGET3E11EADE:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri:
+          Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - ":apigateway:"
+              - Ref: AWS::Region
+              - :lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                  - functionF19B1A04
+                  - Arn
+              - /invocations
+      ResourceId:
+        Ref: RestapiendpointE1F197CA
+      RestApiId:
+        Ref: Restapi01EE340E
+    Metadata:
+      aws:cdk:path: IacStack/Restapi/Default/endpoint/GET/Resource
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Analytics: v2:deflate64:H4sIAAAAAAAA/1VQyW6DMBD9ltyNm7Q59Jqk6q2L0t6RsadkANuIGTdCiH+vbegmIb1F896MuZW7/V5uN+pKhTZt0WElpzdWuhXRKiczOmW9iea7qjoQpw+XySw6ZSujSucNNCSfMzwGpxm9E6isnM5+CWR89R3qMcmFzYLuSkUETPKQIGp5DLoFPiqCtV5OMfDTmsIwWCSKahaqx1oxXNUYdwHxoce8bqUP0Hd+tOA4uX9UfF6dD1tInPdh0JDXfou1aOFPwBdvkrWwef6dy7enInR1mngJ3Af+F4/85J1BzlenHyYbuvnc3cv4bTcNIRZDcIwW5HnBL1evyf2XAQAA
+    Metadata:
+      aws:cdk:path: IacStack/CDKMetadata/Default
+    Condition: CDKMetadataAvailable
+Outputs:
+  RestapiEndpoint32834D92:
+    Value:
+      Fn::Join:
+        - ""
+        - - https://
+          - Ref: Restapi01EE340E
+          - .execute-api.
+          - Ref: AWS::Region
+          - "."
+          - Ref: AWS::URLSuffix
+          - /
+          - Ref: RestapiDeploymentStageprodE8F7F246
+          - /
+Conditions:
+  CDKMetadataAvailable:
+    Fn::Or:
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - af-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ca-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-northwest-1
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-3
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - il-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - me-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - me-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - sa-east-1
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-2
+Parameters:
+  BootstrapVersion:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /cdk-bootstrap/hnb659fds/version
+    Description: Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]
+Rules:
+  CheckBootstrapVersion:
+    Assertions:
+      - Assert:
+          Fn::Not:
+            - Fn::Contains:
+                - - "1"
+                  - "2"
+                  - "3"
+                  - "4"
+                  - "5"
+                - Ref: BootstrapVersion
+        AssertDescription: CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.

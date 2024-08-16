@@ -1,0 +1,27 @@
+/*NOT so good at it*/
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #1fa2a2;
+     font-size: 14pt;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+        "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+        sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+button {    
+    background-color: forestgreen;
+  color: white;
+}
+
+table {
+    border: 1px solid;
+    margin: 20px;
+  }
+
+  input,
+textarea {
+  width: 200px;
+}
