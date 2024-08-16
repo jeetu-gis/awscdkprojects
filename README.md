@@ -1,5 +1,5 @@
+**Welcome to My CDK TypeScript Samples**
 
-**AWS CDK Samples**
 - Typescript Samples
 - Sample application demonstrating a three-tier web application using serverless, React and AWS CDK.
 
