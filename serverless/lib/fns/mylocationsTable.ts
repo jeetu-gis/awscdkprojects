@@ -2,6 +2,7 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { Entity, Table } from "dynamodb-onetable";
 import Dynamo from "dynamodb-onetable/Dynamo";
 import { format } from "path";
+// npm i @aws-sdk/client-dynamodb dynamodb-onetable
 
 const client = new Dynamo({ client: new DynamoDBClient({}) });
 const schema = {

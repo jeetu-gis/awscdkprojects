@@ -150,67 +150,67 @@ export class ServerlessStack extends cdk.Stack {
     };
 
     // Run vite build for react app, then copy to cdk output
-    const bundle = Source.asset(join(__dirname, "web"), {
-      bundling: {
-        command: [
-          "sh",
-          "-c",
-          'echo "Docker build not supported. Please install esbuild."',
-        ],
-        image: cdk.DockerImage.fromRegistry("alpine"),
-        local: {
-          tryBundle(outputDir: string) {
-            try {
-              execSync("esbuild --version", ececOptions);
-            } catch {
-              return false;
-            }
-            execSync("npx vite build", ececOptions);
-            fs.copySync(join(__dirname, "../dist"), outputDir, {
-              overwrite: true,
-            });
-            return true;
-          },
-        },
-      },
-    });
+    // const bundle = Source.asset(join(__dirname, "web"), {
+    //   bundling: {
+    //     command: [
+    //       "sh",
+    //       "-c",
+    //       'echo "Docker build not supported. Please install esbuild."',
+    //     ],
+    //     image: cdk.DockerImage.fromRegistry("alpine"),
+    //     local: {
+    //       tryBundle(outputDir: string) {
+    //         try {
+    //           execSync("esbuild --version", ececOptions);
+    //         } catch {
+    //           return false;
+    //         }
+    //         execSync("npx vite build", ececOptions);
+    //         fs.copySync(join(__dirname, "../dist"), outputDir, {
+    //           overwrite: true,
+    //         });
+    //         return true;
+    //       },
+    //     },
+    //   },
+    // });
 
-    // SET Prune to false or the config.json will be overwritten
-    //if deploying frequently, we should clean up the older files
-    new BucketDeployment(this, "deploy", {
-      destinationBucket: websiteBucket,
-      distribution,
-      logRetention: RetentionDays.ONE_DAY,
-      prune: false,
-      sources: [bundle],
-    });
+    // // SET Prune to false or the config.json will be overwritten
+    // //if deploying frequently, we should clean up the older files
+    // new BucketDeployment(this, "deploy", {
+    //   destinationBucket: websiteBucket,
+    //   distribution,
+    //   logRetention: RetentionDays.ONE_DAY,
+    //   prune: false,
+    //   sources: [bundle],
+    // });
 
-    // generate the config.json file and put into the S3 for the web app to get API URL
-    new AwsCustomResource(this, "ApiUrlResouece", {
-      logRetention: RetentionDays.ONE_DAY,
-      onUpdate: {
-        action: "putObject",
-        parameters: {
-          Bucket: websiteBucket.bucketName,
-          CacheControl: "max-age=0, no-cache, no-store, must-revalidate",
-          Contenttype: "application/json",
-          Key: "config.json",
-          Body: cdk.Stack.of(this).toJsonString({
-            [this.stackName]: { HttpApiUrl: api.apiEndpoint },
-          }),
-        },
-        physicalResourceId: PhysicalResourceId.of("ApiUrlResouece"),
-        service: "S3",
-      },
-    });
+    // // generate the config.json file and put into the S3 for the web app to get API URL
+    // new AwsCustomResource(this, "ApiUrlResouece", {
+    //   logRetention: RetentionDays.ONE_DAY,
+    //   onUpdate: {
+    //     action: "putObject",
+    //     parameters: {
+    //       Bucket: websiteBucket.bucketName,
+    //       CacheControl: "max-age=0, no-cache, no-store, must-revalidate",
+    //       Contenttype: "application/json",
+    //       Key: "config.json",
+    //       Body: cdk.Stack.of(this).toJsonString({
+    //         [this.stackName]: { HttpApiUrl: api.apiEndpoint },
+    //       }),
+    //     },
+    //     physicalResourceId: PhysicalResourceId.of("ApiUrlResouece"),
+    //     service: "S3",
+    //   },
+    // });
 
-    policy: AwsCustomResourcePolicy.fromStatements([
-      new PolicyStatement({
-        actions: ["s3:PutObject"],
-        resources: [websiteBucket.arnForObjects("config.json")],
-      }),
-    ]),
-      new CfnOutput(this, "HttpApiUrl", { value: api.apiEndpoint });
+    // policy: AwsCustomResourcePolicy.fromStatements([
+    //   new PolicyStatement({
+    //     actions: ["s3:PutObject"],
+    //     resources: [websiteBucket.arnForObjects("config.json")],
+    //   }),
+    // ]),
+    //   new CfnOutput(this, "HttpApiUrl", { value: api.apiEndpoint });
 
     // new CfnOutput(this, "DistributionDomainName", {
     //   value: distribution.distributionDomainName,
